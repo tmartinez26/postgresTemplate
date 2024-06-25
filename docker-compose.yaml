@@ -1,0 +1,77 @@
+---
+services:
+  subscriber:
+    image: bwdesigngroup/ignition-docker-iiot
+    hostname: subscriber
+    volumes:
+      - ./subscriber-data:/workdir
+      - ./backups:/backups
+    environment:
+      SYMLINK_GITIGNORE: false
+      SYMLINK_LOGBACK: false
+      IIOT_MODULES_ENABLED: mqtt-engine
+      GATEWAY_SYSTEM_NAME: <project-name>-subscriber
+      GATEWAY_PUBLIC_HTTPS_PORT: 443
+      GATEWAY_PUBLIC_ADDRESS: <project-name>-subscriber.localtest.me
+    command: >
+        -r /backups/subscriber.gwbk
+    labels:
+      traefik.enable: "true"
+      traefik.hostname: "<project-name>-subscriber"
+    networks:
+        - default
+        - proxy
+
+  broker:
+    image: bwdesigngroup/ignition-docker-iiot
+    hostname: broker
+    volumes:
+        - ./backups:/backups
+    environment:
+      SYMLINK_GITIGNORE: false
+      SYMLINK_LOGBACK: false
+      IIOT_MODULES_ENABLED: mqtt-distributor
+      GATEWAY_SYSTEM_NAME: <project-name>-broker
+      GATEWAY_PUBLIC_HTTPS_PORT: 443
+      GATEWAY_PUBLIC_ADDRESS: <project-name>-broker.localtest.me
+    command: >
+        -r /backups/broker.gwbk
+    labels:
+      traefik.enable: "true"
+      traefik.hostname: "<project-name>-broker"
+    networks:
+        - default
+        - proxy
+
+
+  publisher:
+    image: bwdesigngroup/ignition-docker-iiot
+    hostname: publisher
+    ports:
+      - 82:8088
+    volumes:
+      - ./publisher-data:/workdir
+      - ./backups:/backups
+    environment:
+      SYMLINK_GITIGNORE: false
+      SYMLINK_LOGBACK: false
+      SYMLINK_THEMES: false
+      IIOT_MODULES_ENABLED: mqtt-transmission
+      GATEWAY_SYSTEM_NAME: <project-name>-publisher
+      GATEWAY_PUBLIC_HTTPS_PORT: 443
+      GATEWAY_PUBLIC_ADDRESS: <project-name>-publisher.localtest.me
+
+    command: >
+        -r /backups/publisher.gwbk
+    labels:
+      traefik.enable: "true"
+      traefik.hostname: "<project-name>-publisher"
+    networks:
+        - default
+        - proxy
+
+networks:
+  default:
+  proxy:
+    external: true
+    name: proxy
